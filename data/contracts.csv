@@ -1,0 +1,2 @@
+﻿contract_id,project_name,currency,contract_value_cny,start_date,end_date,installment_years,annual_receivable_cny,source_ocid,source_contract_id,source_contract_title,source_contract_value,source_currency,record_origin
+SIM-CN-2026-001,Long-term infrastructure operations demo,CNY,15000000.00,2026-01-01,2045-12-31,20,750000.00,ocds-213czf-000-00001,ocds-213czf-000-00001-contract-01,Contract to build new cycle lanes in the centre of town.,11000000,GBP,synthetic_from_ocds_example
