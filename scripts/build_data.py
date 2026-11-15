@@ -22,7 +22,9 @@ DATA = ROOT / "data"
 CONTRACT_ID = "SIM-CN-2026-001"
 START_YEAR = 2026
 YEARS = 20
-ANNUAL_DUE = Decimal("750000.00")
+PROJECT_COST = Decimal("15000000.00")
+TERMINAL_DISPOSAL = Decimal("2000000.00")
+ANNUAL_DUE = Decimal("1300000.00")
 DOC_TYPES = (
     "equipment_receipt",
     "material_receipt",
@@ -55,10 +57,12 @@ def build(as_of: date) -> dict[str, int]:
         "project_name": "Long-term infrastructure operations demo",
         "currency": "CNY",
         "contract_value_cny": money(ANNUAL_DUE * YEARS),
+        "project_cost_cny": money(PROJECT_COST),
         "start_date": f"{START_YEAR}-01-01",
         "end_date": f"{START_YEAR + YEARS - 1}-12-31",
         "installment_years": YEARS,
         "annual_receivable_cny": money(ANNUAL_DUE),
+        "terminal_disposal_proceeds_cny": money(TERMINAL_DISPOSAL),
         "source_ocid": source_ocid,
         "source_contract_id": source_contract["id"],
         "source_contract_title": source_contract["title"],
@@ -127,6 +131,7 @@ def build(as_of: date) -> dict[str, int]:
             "installment_year": year,
             "due_date": due.isoformat(),
             "scheduled_receivable_cny": money(ANNUAL_DUE),
+            "disposal_proceeds_cny": money(TERMINAL_DISPOSAL if year == START_YEAR + YEARS - 1 else 0),
             "actual_receipt_cny": money(actual),
             "outstanding_cny": money(ANNUAL_DUE - actual),
             "risk_flag": risk,

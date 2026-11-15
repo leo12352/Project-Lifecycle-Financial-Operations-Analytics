@@ -4,7 +4,7 @@
 
 ### 项目背景与痛点
 
-这是一个长期项目财务运营分析的**模拟案例**：合同额 1500 万元，分 20 年回款。长期项目常见的审核难点包括原始凭证数量多、发票与凭证金额不一致、跨期开票需要复核，以及应收与实收在不同年份分散。仓库把这些问题做成可重复构建的四张关联 CSV，并提供 SQL、Pandas Notebook 和四视图看板。
+这是一个长期项目财务运营分析的**模拟案例**：项目基础成本 1500 万元，分 20 年每年计划回款 130 万元，并在第 20 年计划取得固定资产报废处置收入 200 万元。分期回款合计 2600 万元，连同处置收入的计划总流入为 2800 万元。长期项目常见的审核难点包括原始凭证数量多、发票与凭证金额不一致、跨期开票需要复核，以及应收与实收在不同年份分散。仓库把这些问题做成可重复构建的四张关联 CSV，并提供 SQL、Pandas Notebook 和四视图看板。
 
 ### 数据性质与来源
 
@@ -15,7 +15,7 @@
 - Python 标准库生成四张 CSV，Pandas 与 NumPy 执行 Notebook 分析，SQLite 语法的 SQL 输出对账异常。
 - 合同表通过 `contract_id` 关联凭证、发票和年度现金流；凭证通过 `invoice_id` 关联发票。表粒度与关系见 [数据设计](docs/data_design.md)。
 - 金额差异 = 发票未税金额 − 关联凭证金额合计；重复单据号按合同和单据号判定；逾期应收仅统计截止日之前到期且未收的金额。跨期发票是复核提示，不自动判定违规。
-- 合同额减凭证金额是**毛利代理值**，不等于会计利润。
+- 分期回款加期末处置收入减项目基础成本为**未折现计划差额 1300 万元**，不等于会计利润。凭证金额属于成本明细样本，不在 1500 万元基础成本之外重复扣除。
 
 ### 运行方法
 
@@ -40,13 +40,13 @@ python scripts/build_dashboard.py
 
 ### Background and problem
 
-This is a **synthetic** long-term project finance case with a CNY 15 million contract and 20 annual installments. It demonstrates document volume review, invoice-to-voucher reconciliation, cross-period invoice review, and receivable monitoring. The repository includes four linked CSV files, a SQL exception query, a Pandas notebook, and a four-view offline dashboard.
+This is a **synthetic** long-term project finance case with a CNY 15 million base project cost, twenty annual planned receipts of CNY 1.3 million each, and CNY 2 million terminal asset disposal proceeds in year 20. It demonstrates document volume review, invoice-to-voucher reconciliation, cross-period invoice review, and receivable monitoring. The repository includes four linked CSV files, a SQL exception query, a Pandas notebook, and a four-view offline dashboard.
 
 ### Provenance and method
 
 The public source is the [Open Contracting Partnership fictional OCDS example](https://github.com/open-contracting/sample-data/tree/703affda90d0fb16a7cbfd0ee126ac77261d3d06/fictional-example/1.1). It supplies contract metadata and schema inspiration. **Every financial record in the four CSVs is generated**, not a real invoice, voucher, tax filing, or payment. See [provenance](docs/data_sources.md) and [data model](docs/data_design.md).
 
-The builder uses Python's standard library and a fixed seed. The notebook uses Pandas and NumPy. SQL reports invoice amount variance, repeated document references, cross-period review flags, and overdue receivables. The margin proxy is contract value less generated voucher costs and is not accounting profit.
+The builder uses Python's standard library and a fixed seed. The notebook uses Pandas and NumPy. SQL reports invoice amount variance, repeated document references, cross-period review flags, and overdue receivables. The undiscounted plan surplus is CNY 28 million of planned inflows less CNY 15 million of base project cost, or CNY 13 million; it is not accounting profit. Voucher amounts are cost detail samples and are not deducted twice.
 
 ### Run and review
 

@@ -9,15 +9,17 @@
 - License: BSD 3-Clause; the original license is retained at `sources/ocds/LICENSE`.
 - Nature: a **fictional** example of the Open Contracting Data Standard, not live procurement data.
 
-The builder reads `ocid`, contract ID, title, value, and currency from the public example. The source describes an GBP 11 million, roughly one-year fictional contract and two sample implementation transactions. The 20-year CNY 15 million scenario is **not** a conversion of that source contract. The source transactions are not copied into the analytical tables.
+The builder reads `ocid`, contract ID, title, value, and currency from the public example. The source describes an GBP 11 million, roughly one-year fictional contract and two sample implementation transactions. The 20-year CNY 15 million base-cost scenario with CNY 1.3 million annual receipts and CNY 2 million terminal disposal proceeds is **not** a conversion of that source contract. The source transactions are not copied into the analytical tables.
 
 ## Scenario assumptions
 
 | Item | Assumption | Origin |
 | --- | --- | --- |
-| Contract amount | CNY 15,000,000 | Local development requirements |
+| Base project cost | CNY 15,000,000 | Customer revision; synthetic scenario |
+| Installment contract value | CNY 26,000,000 | 20 × CNY 1,300,000 |
+| Terminal asset disposal proceeds | CNY 2,000,000 in 2045 | Customer revision; separate from installments |
 | Term | 2026–2045, 20 annual installments | Local development requirements; specific dates simulated |
-| Annual receivable | CNY 750,000 | Contract amount divided by 20 |
+| Annual receivable | CNY 1,300,000 | Customer revision |
 | Vouchers | 42 per year, 840 total | Generated with fixed seed; amounts and dates simulated |
 | Invoices | One per two vouchers, 420 total; service period uses the last linked voucher date | Generated for reconciliation exercises |
 | VAT rates | 13% for equipment/material pairs; 9% for work/acceptance pairs | Simplified demo assumptions; not tax advice |

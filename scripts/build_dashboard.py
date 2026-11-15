@@ -31,6 +31,8 @@ vouchers = rows("vouchers_and_docs.csv")
 invoices = rows("tax_and_invoices.csv")
 cash = rows("cash_flow_schedule.csv")
 contract_value = Decimal(contracts[0]["contract_value_cny"])
+project_cost = Decimal(contracts[0]["project_cost_cny"])
+disposal_total = sum((Decimal(row["disposal_proceeds_cny"]) for row in cash), Decimal(0))
 voucher_total = sum((Decimal(row["amount_cny"]) for row in vouchers), Decimal(0))
 actual_total = sum((Decimal(row["actual_receipt_cny"]) for row in cash), Decimal(0))
 overdue_total = sum((Decimal(row["outstanding_cny"]) for row in cash if row["risk_flag"] == "overdue"), Decimal(0))
@@ -57,8 +59,8 @@ def bars(values, maximum, currency=True):
 
 
 cash_table = table(
-    ["年度", "到期日", "应收", "实收", "未收", "状态"],
-    [(row["installment_year"], row["due_date"], amount(row["scheduled_receivable_cny"]), amount(row["actual_receipt_cny"]), amount(row["outstanding_cny"]), row["risk_flag"]) for row in cash],
+    ["年度", "到期日", "分期应收", "处置收入", "实收", "分期未收", "状态"],
+    [(row["installment_year"], row["due_date"], amount(row["scheduled_receivable_cny"]), amount(row["disposal_proceeds_cny"]), amount(row["actual_receipt_cny"]), amount(row["outstanding_cny"]), row["risk_flag"]) for row in cash],
 )
 invoice_table = table(["发票", "服务期间", "开票日期", "差额", "提示"], invoice_review)
 voucher_table = table(["凭证", "重复单据号", "供应商", "金额"], duplicate_rows)
@@ -76,8 +78,8 @@ page = f"""<!doctype html>
 <header><h1>长期项目财务运营分析</h1><p>Project Lifecycle Financial Operations Analytics · 模拟数据 · 截止日期 {cash[0]['as_of_date']}</p></header>
 <nav><button class="active" data-page="overview">经营与创利</button><button data-page="cash">现金流风险</button><button data-page="tax">发票与税务</button><button data-page="vouchers">凭证与供应链</button></nav>
 <main>
-<section id="overview" class="active"><h2>经营与创利概览</h2><div class="grid"><div class="card"><small>合同总额</small><strong>{amount(contract_value)}</strong></div><div class="card"><small>凭证成本代理值</small><strong>{amount(voucher_total)}</strong></div><div class="card"><small>毛利代理值</small><strong>{amount(contract_value-voucher_total)}</strong></div><div class="card"><small>已收款</small><strong>{amount(actual_total)}</strong></div></div><div class="panel"><h3>供应商凭证金额</h3>{supplier_bars}</div><p class="note">毛利代理值仅为合同额减去模拟凭证金额，不等于会计利润；未包含财务费用、税费、期间费用等。</p></section>
-<section id="cash"><h2>长周期现金流风险</h2><div class="grid"><div class="card"><small>应收总额</small><strong>{amount(contract_value)}</strong></div><div class="card"><small>已收款</small><strong>{amount(actual_total)}</strong></div><div class="card"><small>逾期未收</small><strong>{amount(overdue_total)}</strong></div><div class="card"><small>分期年数</small><strong>{len(cash)}</strong></div></div><div class="panel"><h3>分期计划</h3>{cash_table}</div><p class="note">future 代表未到期计划，不计作逾期。风险判断基于生成数据中的截止日期。</p></section>
+<section id="overview" class="active"><h2>经营与创利概览</h2><div class="grid"><div class="card"><small>项目成本</small><strong>{amount(project_cost)}</strong></div><div class="card"><small>凭证金额（成本明细样本）</small><strong>{amount(voucher_total)}</strong></div><div class="card"><small>固定资产处置收入（2045）</small><strong>{amount(disposal_total)}</strong></div><div class="card"><small>计划总流入减项目成本</small><strong>{amount(contract_value+disposal_total-project_cost)}</strong></div><div class="card"><small>已收款</small><strong>{amount(actual_total)}</strong></div></div><div class="panel"><h3>供应商凭证金额</h3>{supplier_bars}</div><p class="note">分期回款加期末处置收入减项目成本为未折现的简化差额；处置收入为第 20 年计划额，不属于分期应收；凭证金额是成本明细样本，不在 1500 万项目成本之外重复扣除。该差额不等于会计利润。</p></section>
+<section id="cash"><h2>长周期现金流风险</h2><div class="grid"><div class="card"><small>20 年分期应收</small><strong>{amount(contract_value)}</strong></div><div class="card"><small>期末处置收入</small><strong>{amount(disposal_total)}</strong></div><div class="card"><small>计划总流入</small><strong>{amount(contract_value+disposal_total)}</strong></div><div class="card"><small>已收款</small><strong>{amount(actual_total)}</strong></div><div class="card"><small>逾期未收</small><strong>{amount(overdue_total)}</strong></div><div class="card"><small>分期年数</small><strong>{len(cash)}</strong></div></div><div class="panel"><h3>分期计划</h3>{cash_table}</div><p class="note">future 代表未到期分期，不计作逾期。2045 年处置收入单列为计划额，尚未收到，也不计入分期逾期。风险判断基于生成数据中的截止日期。</p></section>
 <section id="tax"><h2>跨期发票与税务合规监控</h2><div class="grid"><div class="card"><small>发票总数</small><strong>{len(invoices)}</strong></div><div class="card"><small>金额差异</small><strong>{sum(Decimal(row['net_amount_cny']) != invoice_vouchers[row['invoice_id']] for row in invoices)}</strong></div><div class="card"><small>跨期复核</small><strong>{sum(row['invoice_date'][:7] != row['service_period'] for row in invoices)}</strong></div></div><div class="panel"><h3>发票复核清单</h3>{invoice_table}</div><p class="note">跨期仅是复核提示，不自动判定税务违规。税率为简化演示假设。</p></section>
 <section id="vouchers"><h2>原始凭证与供应链监盘</h2><div class="grid"><div class="card"><small>凭证总数</small><strong>{len(vouchers)}</strong></div><div class="card"><small>重复单据号组</small><strong>{sum(count>1 for count in references.values())}</strong></div><div class="card"><small>供应商数</small><strong>{len(suppliers)}</strong></div></div><div class="panel"><h3>单据类型数量</h3>{type_bars}</div><div class="panel"><h3>重复单据号复核</h3>{voucher_table}</div></section>
 </main><footer>公开来源为 Open Contracting Partnership 的虚构 OCDS 示例。所有分析记录均为本项目生成的模拟数据。此页面可离线打开。</footer>

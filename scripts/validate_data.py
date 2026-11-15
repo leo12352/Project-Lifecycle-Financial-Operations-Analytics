@@ -39,8 +39,15 @@ def main() -> None:
     require(all(row["record_origin"] == "synthetic_from_ocds_example" for row in contracts + vouchers + invoices + cash), "unlabeled generated record")
 
     contract_value = Decimal(contracts[0]["contract_value_cny"])
+    project_cost = Decimal(contracts[0]["project_cost_cny"])
     scheduled = sum(Decimal(row["scheduled_receivable_cny"]) for row in cash)
-    require(contract_value == scheduled == Decimal("15000000.00"), "contract and installment total differ")
+    require(project_cost == Decimal("15000000.00"), "project cost must be CNY 15 million")
+    require(contract_value == scheduled == Decimal("26000000.00"), "contract and installment total differ")
+    require(all(Decimal(row["scheduled_receivable_cny"]) == Decimal("1300000.00") for row in cash), "annual installment must be CNY 1.3 million")
+    require(Decimal(contracts[0]["terminal_disposal_proceeds_cny"]) == Decimal("2000000.00"), "terminal disposal amount mismatch")
+    require(sum(Decimal(row["disposal_proceeds_cny"]) for row in cash) == Decimal("2000000.00"), "terminal disposal total mismatch")
+    require(all(Decimal(row["disposal_proceeds_cny"]) == (Decimal("2000000.00") if row["installment_year"] == "2045" else Decimal("0.00")) for row in cash), "disposal must be in final year only")
+    require(scheduled + Decimal(contracts[0]["terminal_disposal_proceeds_cny"]) - project_cost == Decimal("13000000.00"), "simplified undiscounted surplus mismatch")
     require(all(Decimal(row["scheduled_receivable_cny"]) - Decimal(row["actual_receipt_cny"]) == Decimal(row["outstanding_cny"]) for row in cash), "outstanding amount mismatch")
 
     voucher_totals: dict[str, Decimal] = defaultdict(lambda: Decimal("0.00"))
